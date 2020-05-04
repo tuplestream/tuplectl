@@ -28,4 +28,7 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - bump_version
+      - bump_version:
+          requires:
+            branches:
+              - master
