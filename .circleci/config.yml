@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: tuplestream/golang:latest
+    steps:
+      - checkout
+      - run: ./build.bash
+      - persist_to_workspace:
+          root: .
+          paths:
+            - tuplectl
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build

@@ -52,6 +52,9 @@ type JwtSuccess struct {
 	TokenType   string `json:"token_type"`
 }
 
+var clientID = "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx"
+var tenantURL = "https://dev-ak43b46u.eu.auth0.com"
+
 func main() {
 	// verbose := flag.String("v", "", "Get the current version of tuplectl")
 	// flag.Parse()
@@ -67,11 +70,11 @@ func main() {
 	// }
 
 	form := url.Values{}
-	form.Add("client_id", "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx")
+	form.Add("client_id", clientID)
 	form.Add("scope", "read:email")
 	form.Add("audience", "https://api.tuplestream.net/")
 
-	resp, err := http.PostForm("https://dev-ak43b46u.eu.auth0.com/oauth/device/code", form)
+	resp, err := http.PostForm(tenantURL+"/oauth/device/code", form)
 	handleError(err)
 	defer resp.Body.Close()
 
@@ -95,10 +98,10 @@ func main() {
 
 		pollForm := url.Values{}
 		pollForm.Add("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
-		pollForm.Add("client_id", "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx")
+		pollForm.Add("client_id", clientID)
 		pollForm.Add("device_code", cr.DeviceCode)
 
-		resp, err = http.PostForm("https://dev-ak43b46u.eu.auth0.com/oauth/token", pollForm)
+		resp, err = http.PostForm(tenantURL+"/oauth/token", pollForm)
 		handleError(err)
 		defer resp.Body.Close()
 
