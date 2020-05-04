@@ -11,9 +11,21 @@ jobs:
           root: .
           paths:
             - tuplectl
+  bump_version:
+    docker:
+      - image: tuplestream/bumpversion:latest
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c8:96:78:e4:f0:49:4e:49:f8:f2:87:80:c5:a7:53:7c"
+      - checkout
+      - run:
+          name: run bumpversion and push
+          command: bump
 
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
+      - bump_version
