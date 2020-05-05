@@ -124,7 +124,7 @@ func auth() {
 			// set password in keyring
 			err := keyring.Set("Tuplestream", "default", jwt)
 			if err != nil {
-				print("Warning: unable to store credentials in the system keychain. " +
+				warn("unable to store credentials in the system keychain. " +
 					"You'll have to repeat this process next time you run an authenticated tuplectl command")
 			}
 			break

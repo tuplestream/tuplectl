@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 )
 
 func handleError(err error) {
@@ -15,6 +16,16 @@ func handleError(err error) {
 func debug(str string) {
 	if os.Getenv("TUPLECTL_DEBUG") != "" {
 		log.Print(str)
+	}
+}
+
+func warn(str string) {
+	warn := "WARNING: "
+	shouldPrintColor := runtime.GOOS == "darwin"
+	if shouldPrintColor {
+		fmt.Println("\033[31m" + warn + "\033[30m" + str)
+	} else {
+		fmt.Println(warn + str)
 	}
 }
 

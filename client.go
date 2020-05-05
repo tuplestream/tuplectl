@@ -18,8 +18,11 @@ func userAgent() string {
 func baseURL() string {
 	userSpecified := os.Getenv("TUPLECTL_API_BASE_URL")
 	if userSpecified != "" {
-		_, err := url.ParseRequestURI(userSpecified)
+		url, err := url.ParseRequestURI(userSpecified)
 		handleError(err)
+		if url.Scheme == "http" {
+			warn("using insecure base url for API calls. Consider using an 'https' endpoint.")
+		}
 		return userSpecified
 	}
 	return "https://api.tuplestream.net"
