@@ -14,4 +14,3 @@ else
   go get github.com/zalando/go-keyring
   go build -a -o tuplectl .
 fi
-

@@ -21,6 +21,7 @@ jobs:
       - run:
           name: release build and push
           command: |
+            git pull --no-edit origin master
             ./build.bash -release
       - persist_to_workspace:
           root: .
