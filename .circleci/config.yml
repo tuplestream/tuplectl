@@ -22,7 +22,6 @@ jobs:
           name: bump version and perform release
           command: |
             bump
-            hub release create -a tuplectl -m 'test release via hub' $(cat VERSION)
 
 workflows:
   version: 2
