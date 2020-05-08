@@ -30,6 +30,7 @@ jobs:
     docker:
       - image: tuplestream/bumpversion:latest
     steps:
+      - checkout
       - attach_workspace:
           at: bin
       - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m 'test title' $(cat VERSION)
