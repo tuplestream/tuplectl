@@ -23,6 +23,7 @@ func warn(str string) {
 	warn := "WARNING: "
 	shouldPrintColor := runtime.GOOS == "darwin"
 	if shouldPrintColor {
+		// highlight WARNING in red if we're on a mac
 		fmt.Println("\033[31m" + warn + "\033[30m" + str)
 	} else {
 		fmt.Println(warn + str)
@@ -62,6 +63,17 @@ func main() {
 	auth()
 
 	switch os.Args[1] {
+	case "firstrun":
+		fmt.Println("this is the critical path")
+		// 1. authenticate / sign up
+		// 2. check for any deployments / logstreams
+		// 3. if none, ask if k8s / lambda
+		// 4. validate environment
+		// 5. if failure, open docs web page
+		// 6. if env is good, prompt for deployment name
+		// 7. prompt for confirmation
+		// 8. tail all streams for response
+		// 9. success message, link to docs
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
 	case "version":

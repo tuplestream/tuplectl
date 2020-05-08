@@ -15,13 +15,8 @@ jobs:
     docker:
       - image: tuplestream/bumpversion:latest
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "5f:24:38:64:d4:33:46:8c:fa:0a:30:e0:6e:4c:ef:8d"
       - checkout
-      - run:
-          name: run bumpversion and push
-          command: bump
+      - run: bump
 
 workflows:
   version: 2
