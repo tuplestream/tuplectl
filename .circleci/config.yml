@@ -16,7 +16,14 @@ jobs:
       - image: tuplestream/bumpversion:latest
     steps:
       - checkout
-      - run: bump
+      - attach_workspace:
+          at:
+            - tuplectl
+      - run:
+          name: bump version and perform release
+          command: |
+            bump
+            hub release create -a tuplectl -m 'test release via hub' $(cat VERSION)
 
 workflows:
   version: 2
@@ -26,4 +33,3 @@ workflows:
       - bump_version:
           requires:
             - build
-
