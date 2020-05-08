@@ -17,8 +17,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at:
-            - tuplectl
+          at: tuplectl
       - run:
           name: bump version and perform release
           command: |
