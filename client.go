@@ -16,7 +16,7 @@ func userAgent() string {
 }
 
 func baseURL() string {
-	userSpecified := os.Getenv("TUPLECTL_API_BASE_URL")
+	userSpecified := os.Getenv("TUPLECTL_CONTROL_API_BASE_URL")
 	if userSpecified != "" {
 		url, err := url.ParseRequestURI(userSpecified)
 		handleError(err)
