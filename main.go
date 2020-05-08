@@ -31,7 +31,7 @@ func warn(str string) {
 }
 
 func version() string {
-	return "v0.2.0"
+	return "AUTOREPLACED-VERSION"
 }
 
 func usage() {

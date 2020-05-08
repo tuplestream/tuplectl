@@ -7,21 +7,33 @@ jobs:
     steps:
       - checkout
       - run: ./build.bash
-      - persist_to_workspace:
-          root: .
-          paths:
-            - tuplectl
   bump_version:
     docker:
       - image: tuplestream/bumpversion:latest
     steps:
       - checkout
-      - attach_workspace:
-          at: tuplectl
+      - run: bump
+  release_build:
+    docker:
+      - image: tuplestream/golang:latest
+    steps:
+      - checkout
       - run:
-          name: bump version and perform release
+          name: release build and push
           command: |
-            bump
+            ./build.bash -release
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/*
+    github_release:
+      docker:
+        - image: tuplestream/bumpversion:latest
+      steps:
+        - checkout
+        - attach_workspace:
+            at: bin
+        - run: ls -la
 
 workflows:
   version: 2
@@ -31,3 +43,9 @@ workflows:
       - bump_version:
           requires:
             - build
+      - release_build:
+          requires:
+            - bump_version
+      - github_release:
+          requires:
+            - release_build
