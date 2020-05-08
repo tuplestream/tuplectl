@@ -31,7 +31,7 @@ func warn(str string) {
 }
 
 func version() string {
-	return "x.y.z"
+	return "v0.2.0"
 }
 
 func usage() {
@@ -77,7 +77,7 @@ func main() {
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
 	case "version":
-		fmt.Println("Tuplectl version " + version())
+		fmt.Println("Tuplectl " + version())
 	default:
 		usage()
 	}
