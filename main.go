@@ -44,6 +44,7 @@ func status() {
 }
 
 func dispatchGet(resource string, args []string) {
+	auth()
 	switch resource {
 	case "logstreams":
 		fmt.Println("TODO logstreams")
@@ -60,12 +61,11 @@ func main() {
 		usage()
 	}
 
-	auth()
-
 	switch os.Args[1] {
-	case "firstrun":
+	case "setup":
 		fmt.Println("this is the critical path")
 		// 1. authenticate / sign up
+		auth()
 		// 2. check for any deployments / logstreams
 		// 3. if none, ask if k8s / lambda
 		// 4. validate environment

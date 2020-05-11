@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/zalando/go-keyring"
@@ -27,6 +28,7 @@ type JwtError struct {
 type JwtSuccess struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func openbrowser(url string) {
@@ -58,7 +60,7 @@ func tryReadKeychain() bool {
 		return false
 	}
 	jwt = secret
-	return true
+	return false
 }
 
 func auth() {
@@ -119,6 +121,7 @@ func auth() {
 			handleError(err)
 			print("Finished authentication! " + success.AccessToken)
 			print("Type " + success.TokenType)
+			print("expires in" + strconv.Itoa(success.ExpiresIn))
 			jwt = success.AccessToken
 
 			// set password in keyring

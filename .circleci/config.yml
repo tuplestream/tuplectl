@@ -32,6 +32,7 @@ jobs:
       - image: tuplestream/bumpversion:latest
     steps:
       - checkout
+      - run: git pull --no-edit origin master
       - attach_workspace:
           at: .
       - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m $(cat VERSION) "v$(cat VERSION)"
