@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/tuplestream/tuplectl.svg?style=svg)](https://app.circleci.com/pipelines/github/tuplestream/tuplectl)
 
+[![Gitter](https://badges.gitter.im/tuplestream/community.svg)](https://gitter.im/tuplestream/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 ## Usage
 
 
