@@ -31,7 +31,7 @@ func warn(str string) {
 }
 
 func version() string {
-	return "AUTOREPLACED-VERSION"
+	return "AUTOREPLACED-VERSION | AUTOREPLACED-COMMIT"
 }
 
 func usage() {
@@ -77,7 +77,7 @@ func main() {
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
 	case "version":
-		fmt.Println("Tuplectl " + version())
+		fmt.Println("tuplectl " + version())
 	default:
 		usage()
 	}
