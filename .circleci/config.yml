@@ -45,6 +45,9 @@ workflows:
       - bump_version:
           requires:
             - build
+          filters:
+            branches:
+              only: master
       - release_build:
           requires:
             - bump_version
