@@ -13,6 +13,14 @@ func handleError(err error) {
 	}
 }
 
+func getEnvOrDefault(envVar string, fallback string) string {
+	val := os.Getenv(envVar)
+	if val == "" {
+		val = fallback
+	}
+	return val
+}
+
 func debug(str string) {
 	if os.Getenv("TUPLECTL_DEBUG") != "" {
 		log.Print(str)

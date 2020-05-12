@@ -36,6 +36,12 @@ jobs:
       - attach_workspace:
           at: .
       - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m $(cat VERSION) "v$(cat VERSION)"
+  publish_bootstrap:
+    docker:
+      - image: tuplestream/awscli:latest
+    steps:
+      - checkout
+      - run: aws s3 cp ./bootstrap.bash $S3_TARGET
 
 workflows:
   version: 2
@@ -52,5 +58,8 @@ workflows:
           requires:
             - bump_version
       - github_release:
+          requires:
+            - release_build
+      - publish_bootstrap:
           requires:
             - release_build

@@ -48,8 +48,8 @@ func openbrowser(url string) {
 	handleError(err)
 }
 
-var clientID = "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx"
-var tenantURL = "https://dev-ak43b46u.eu.auth0.com"
+var clientID = getEnvOrDefault("TUPLECTL_AUTH_CLIENT_ID", "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx")
+var tenantURL = getEnvOrDefault("TUPLECTL_AUTH_BASE_URL", "https://dev-ak43b46u.eu.auth0.com")
 
 var jwt = ""
 
