@@ -38,7 +38,7 @@ jobs:
       - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m $(cat VERSION) "v$(cat VERSION)"
   publish_bootstrap:
     docker:
-      - image: tuplestream/awscli:latest
+      - image: tuplestream/aws-cli:latest
     steps:
       - checkout
       - run: aws s3 cp ./bootstrap.bash $S3_TARGET
