@@ -41,7 +41,7 @@ jobs:
       - image: tuplestream/aws-cli:latest
     steps:
       - checkout
-      - run: aws s3 cp ./bootstrap.bash $S3_TARGET/bootstrap
+      - run: aws s3 cp ./bootstrap.bash $S3_TARGET/bootstrap --acl public-read --content-type 'text/x-shellscript'
 
 workflows:
   version: 2
