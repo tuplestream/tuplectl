@@ -19,9 +19,9 @@ install_tuplectl() {
 
 download_tuplectl() {
   OS=$(uname -s)
-  curl -o tuplectl -L https://github.com/tuplestream/tuplectl/releases/latest/download/tuplectl-Darwin-amd64 --progress-bar
+  curl -o tuplectl -L "https://github.com/tuplestream/tuplectl/releases/latest/download/tuplectl-${OS}-amd64" --progress-bar
   echo "tuplectl will be installed at /usr/local/bin/tuplectl, you'll be prompted for your root password to move it there. Is this ok? [Y/n]"
-  read -s -n 1 input
+  read -r -s -n 1 input
   if [[ $input = "" ]]; then
     install_tuplectl
   elif [[ $input = "Y" ]]; then
@@ -38,7 +38,7 @@ download_tuplectl() {
 
 setup_tuplectl() {
   echo "Couldn't find tuplectl on your path, download and install now? [Y/n]"
-  read -s -n 1 input
+  read -r -s -n 1 input
   if [[ $input = "" ]]; then
     download_tuplectl
   elif [[ $input = "Y" ]]; then
