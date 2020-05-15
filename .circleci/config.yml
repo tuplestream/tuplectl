@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   check_bootstrap:
     docker:
-      - image: koalaman/shellcheck:latest
+      - image: koalaman/shellcheck-alpine:latest
     steps:
       - checkout
       - run: shellcheck ./bootstrap.bash
