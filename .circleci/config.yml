@@ -53,7 +53,7 @@ jobs:
           name: build and publish docker image
           command: |
             BUILDNAME="tuplectl"
-            IMAGENAME="tuplestream/$BUILDNAME:$VERSION"
+            IMAGENAME="tuplestream/$BUILDNAME:$(cat VERSION)"
             IMAGE_LATEST="tuplestream/$BUILDNAME:latest"
 
             docker build . -t $IMAGENAME
