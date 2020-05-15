@@ -42,6 +42,26 @@ jobs:
       - attach_workspace:
           at: .
       - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m $(cat VERSION) "v$(cat VERSION)"
+  docker_release:
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - checkout
+      - run: git pull --no-edit origin master
+      - setup_remote_docker
+      - run:
+          name: build and publish docker image
+          command: |
+            BUILDNAME="tuplectl"
+            IMAGENAME="tuplestream/$BUILDNAME:$VERSION"
+            IMAGE_LATEST="tuplestream/$BUILDNAME:latest"
+
+            docker build . -t $IMAGENAME
+            echo $DKPW | docker login --username $DOCKER_USER --password-stdin
+            docker push $IMAGENAME
+            docker tag $IMAGENAME $IMAGE_LATEST
+            docker push $IMAGE_LATEST
+
   publish_bootstrap:
     docker:
       - image: tuplestream/aws-cli:latest
@@ -66,6 +86,9 @@ workflows:
           requires:
             - bump_version
       - github_release:
+          requires:
+            - release_build
+      - docker_release:
           requires:
             - release_build
       - publish_bootstrap:
