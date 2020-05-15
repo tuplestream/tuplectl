@@ -1,6 +1,5 @@
 .bumpversion.cfg
 .circleci
-# .git
 .gitignore
 bootstrap.bash
 bin
