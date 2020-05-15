@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Tuplestream bootstrap script
-# Problems? Suggestions? Send a PR to github.com/tuplstream/tuplectl
+# Problems? Suggestions? Send a PR to github.com/tuplestream/tuplectl
 # or discuss on Gitter: https://gitter.im/tuplestream/community
 #
 set -euf -o pipefail
@@ -39,7 +39,7 @@ download_tuplectl() {
 setup_tuplectl() {
   echo "Couldn't find tuplectl on your path, download and install now? [Y/n]"
   read -s -n 1 input
-  if [[ $input = "" ]]; then 
+  if [[ $input = "" ]]; then
     download_tuplectl
   elif [[ $input = "Y" ]]; then
     download_tuplectl

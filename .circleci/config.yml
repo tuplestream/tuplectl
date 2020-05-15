@@ -1,6 +1,12 @@
 version: 2.1
 
 jobs:
+  check_bootstrap:
+    docker:
+      - image: koalaman/shellcheck:latest
+    steps:
+      - checkout
+      - run: shellcheck ./bootstrap.bash
   build:
     docker:
       - image: tuplestream/golang:latest
@@ -41,16 +47,18 @@ jobs:
       - image: tuplestream/aws-cli:latest
     steps:
       - checkout
-      - run: aws s3 cp ./bootstrap.bash $S3_TARGET/bootstrap --acl public-read --content-type 'text/x-shellscript'
+      - run: aws s3 cp bootstrap.bash $S3_TARGET/bootstrap --acl public-read --content-type 'text/x-shellscript'
 
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
+      - check_bootstrap
       - bump_version:
           requires:
             - build
+            - check_bootstrap
           filters:
             branches:
               only: master
