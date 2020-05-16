@@ -7,6 +7,10 @@ import (
 	"runtime"
 )
 
+var Version string
+var Commit string
+var BuildDate string
+
 func handleError(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -39,7 +43,7 @@ func warn(str string) {
 }
 
 func version() string {
-	return "AUTOREPLACED-VERSION | AUTOREPLACED-COMMIT"
+	return "Version: " + Version + " | Commit: " + Commit + " | Built: " + BuildDate
 }
 
 func usage() {
