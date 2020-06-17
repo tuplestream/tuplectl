@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -17,8 +19,9 @@ import (
 type CodeResponse struct {
 	VerificationUriComplete string `json:"verification_uri_complete"`
 	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
 	Interval                int    `json:"interval"`
-	Expires                 int    `json:"expires_in"`
+	ExpiresIn               int    `json:"expires_in"`
 }
 
 type JwtError struct {
@@ -26,9 +29,10 @@ type JwtError struct {
 }
 
 type JwtSuccess struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
 }
 
 func openbrowser(url string) {
@@ -37,8 +41,6 @@ func openbrowser(url string) {
 	switch runtime.GOOS {
 	case "linux":
 		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	case "darwin":
 		err = exec.Command("open", url).Start()
 	default:
@@ -53,6 +55,9 @@ var tenantURL = getEnvOrDefault("TUPLECTL_AUTH_BASE_URL", "https://dev-ak43b46u.
 
 var jwt = ""
 
+// attempt to pull a jwt from the system key store
+// if a valid, in-date jwt is found, returns true
+// in all other circumstances returns false
 func tryReadKeychain() bool {
 	// get password
 	secret, err := keyring.Get("Tuplestream", "default")
@@ -63,11 +68,20 @@ func tryReadKeychain() bool {
 	return false
 }
 
-func auth() {
+func keychainString(data JwtSuccess) string {
+	jwtExpiry := time.Now().Add(time.Duration(data.ExpiresIn) * time.Second)
+	bytes, err := jwtExpiry.MarshalText()
+	handleError(err)
+	return string(bytes) + "|" + data.AccessToken
+}
+
+func doAuth() {
+	// see if we have a current valid token already
 	if tryReadKeychain() {
 		return
 	}
 
+	// initiate auth, ask for device token
 	form := url.Values{}
 	form.Add("client_id", clientID)
 	form.Add("scope", "logstream")
@@ -81,17 +95,27 @@ func auth() {
 	err = json.NewDecoder(resp.Body).Decode(&cr)
 	handleError(err)
 
-	expiryDeadline := time.Now().Add(time.Second * time.Duration(cr.Expires))
+	expiryDeadline := time.Now().Add(time.Second * time.Duration(cr.ExpiresIn))
 	delayInterval := time.Duration(cr.Interval) * time.Second
 
 	debug(fmt.Sprintf("Device code response status: %s", resp.Status))
 	debug(fmt.Sprintf("Auth API callback URL: %s", cr.VerificationUriComplete))
 
+	// tell user we're about to open a browser window, give them the code to look out for
+	fmt.Println(fmt.Sprintf("We need to authenticate you through a browser. Verify code shown is %s", red(cr.UserCode)))
+	fmt.Println("Press any key to start")
+	reader := bufio.NewReader(os.Stdin)
+	_, err = reader.ReadString('\n')
+	handleError(err)
 	openbrowser(cr.VerificationUriComplete)
 
 	for {
+		// wait for a token- continue polling while user is doing their
+		// thing in the browser
 		debug(fmt.Sprintf("Sleeping for %v before polling again", delayInterval))
 		time.Sleep(delayInterval)
+
+		// user took to long or abandonded auth- give up
 		if time.Now().After(expiryDeadline) {
 			log.Fatal("Couldn't verify device token in time")
 		}

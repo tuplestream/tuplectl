@@ -31,15 +31,17 @@ func debug(str string) {
 	}
 }
 
-func warn(str string) {
-	warn := "WARNING: "
+func red(str string) string {
 	shouldPrintColor := runtime.GOOS == "darwin"
 	if shouldPrintColor {
-		// highlight WARNING in red if we're on a mac
-		fmt.Println("\033[31m" + warn + "\033[30m" + str)
-	} else {
-		fmt.Println(warn + str)
+		// highlight in red if we're on a mac
+		return "\033[31m" + str + "\033[0m"
 	}
+	return str
+}
+
+func warn(str string) {
+	fmt.Println(red("WARNING: ") + str)
 }
 
 func version() string {
@@ -56,7 +58,7 @@ func status() {
 }
 
 func dispatchGet(resource string, args []string) {
-	auth()
+	doAuth()
 	switch resource {
 	case "logstreams":
 		fmt.Println("TODO logstreams")
@@ -75,9 +77,8 @@ func main() {
 
 	switch os.Args[1] {
 	case "setup":
-		fmt.Println("this is the critical path")
 		// 1. authenticate / sign up
-		auth()
+		doAuth()
 		// 2. check for any deployments / logstreams
 		// 3. if none, ask if k8s / lambda
 		// 4. validate environment

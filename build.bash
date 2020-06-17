@@ -11,6 +11,7 @@ if [[ " $@ " =~ " -release" ]]; then
   VERSION=$(cat VERSION)
   COMMIT=$(git rev-parse --short HEAD)
 
+  go vet
   GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE'" -a -o bin/tuplectl-linux-amd64 .
   GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE'" -a -o bin/tuplectl-darwin-amd64 .
 else
