@@ -11,11 +11,8 @@ if [[ " $@ " =~ " -release" ]]; then
   VERSION=$(cat VERSION)
   COMMIT=$(git rev-parse --short HEAD)
 
-  GOOS=linux go get github.com/zalando/go-keyring
   GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE'" -a -o bin/tuplectl-linux-amd64 .
-  GOOS=darwin go get github.com/zalando/go-keyring
   GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE'" -a -o bin/tuplectl-darwin-amd64 .
 else
-  go get github.com/zalando/go-keyring
   go build -a -o tuplectl .
 fi
