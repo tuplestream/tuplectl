@@ -31,7 +31,7 @@ func baseURL() string {
 func baseRequest(method string, path string) *http.Request {
 	req, err := http.NewRequest(method, baseURL()+path, nil)
 	handleError(err)
-	req.Header.Add("Authorization", "Bearer "+jwt)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
 	req.Header.Add("User-Agent", userAgent())
 	return req
 }
