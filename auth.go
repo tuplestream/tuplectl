@@ -134,7 +134,7 @@ func tryReadKeychain() bool {
 	}
 
 	accessToken = secret
-	return false
+	return true
 }
 
 func doAuth() {
