@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,9 +14,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/zalando/go-keyring"
 )
 
+// types
 type CodeResponse struct {
 	VerificationUriComplete string `json:"verification_uri_complete"`
 	DeviceCode              string `json:"device_code"`
@@ -35,6 +38,19 @@ type JwtSuccess struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
+type JSONWebKeys struct {
+	Kty string   `json:"kty"`
+	Kid string   `json:"kid"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
+	X5c []string `json:"x5c"`
+}
+
+type Jwks struct {
+	Keys []JSONWebKeys `json:"keys"`
+}
+
 func openbrowser(url string) {
 	var err error
 
@@ -50,29 +66,75 @@ func openbrowser(url string) {
 	handleError(err)
 }
 
+var authKeyName = "com.tuplestream.tuplectl.AccessToken"
+var keychainUser = "default"
 var clientID = getEnvOrDefault("TUPLECTL_AUTH_CLIENT_ID", "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx")
 var tenantURL = getEnvOrDefault("TUPLECTL_AUTH_BASE_URL", "https://dev-ak43b46u.eu.auth0.com")
 
-var jwt = ""
+var accessToken = ""
+
+// from https://auth0.com/docs/quickstart/backend/golang/01-authorization#validate-access-tokens
+func getPemCert(token *jwt.Token) (string, error) {
+	cert := ""
+	resp, err := http.Get(tenantURL + "/.well-known/jwks.json")
+
+	if err != nil {
+		return cert, err
+	}
+	defer resp.Body.Close()
+
+	var jwks = Jwks{}
+	err = json.NewDecoder(resp.Body).Decode(&jwks)
+
+	if err != nil {
+		return cert, err
+	}
+
+	for k := range jwks.Keys {
+		if token.Header["kid"] == jwks.Keys[k].Kid {
+			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
+		}
+	}
+
+	if cert == "" {
+		err := errors.New("unable to find appropriate key")
+		return cert, err
+	}
+
+	return cert, nil
+}
+
+type CustomClaims struct {
+	Scope string `json:"scope"`
+	jwt.StandardClaims
+}
 
 // attempt to pull a jwt from the system key store
 // if a valid, in-date jwt is found, returns true
 // in all other circumstances returns false
 func tryReadKeychain() bool {
-	// get password
-	secret, err := keyring.Get("Tuplestream", "default")
-	if err != nil {
+	// get raw token string
+	secret, err := keyring.Get(authKeyName, keychainUser)
+	if err != nil || secret == "" {
 		return false
 	}
-	jwt = secret
-	return false
-}
 
-func keychainString(data JwtSuccess) string {
-	jwtExpiry := time.Now().Add(time.Duration(data.ExpiresIn) * time.Second)
-	bytes, err := jwtExpiry.MarshalText()
-	handleError(err)
-	return string(bytes) + "|" + data.AccessToken
+	token, _ := jwt.ParseWithClaims(secret, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		cert, err := getPemCert(token)
+		if err != nil {
+			return nil, err
+		}
+		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+		return result, nil
+	})
+
+	if !token.Valid {
+		keyring.Delete(authKeyName, keychainUser)
+		return false
+	}
+
+	accessToken = secret
+	return true
 }
 
 func doAuth() {
@@ -146,10 +208,9 @@ func doAuth() {
 			print("Finished authentication! " + success.AccessToken)
 			print("Type " + success.TokenType)
 			print("expires in" + strconv.Itoa(success.ExpiresIn))
-			jwt = success.AccessToken
 
 			// set password in keyring
-			err := keyring.Set("Tuplestream", "default", jwt)
+			err := keyring.Set(authKeyName, keychainUser, success.AccessToken)
 			if err != nil {
 				warn("unable to store credentials in the system keychain. " +
 					"You'll have to repeat this process next time you run an authenticated tuplectl command")
