@@ -19,26 +19,26 @@ import (
 )
 
 // types
-type CodeResponse struct {
-	VerificationUriComplete string `json:"verification_uri_complete"`
+type codeResponse struct {
+	VerificationURIComplete string `json:"verification_uri_complete"`
 	DeviceCode              string `json:"device_code"`
 	UserCode                string `json:"user_code"`
 	Interval                int    `json:"interval"`
 	ExpiresIn               int    `json:"expires_in"`
 }
 
-type JwtError struct {
+type jwtError struct {
 	Error string `json:"error"`
 }
 
-type JwtSuccess struct {
+type jwtSuccess struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-type JSONWebKeys struct {
+type jsonWebKeys struct {
 	Kty string   `json:"kty"`
 	Kid string   `json:"kid"`
 	Use string   `json:"use"`
@@ -47,8 +47,8 @@ type JSONWebKeys struct {
 	X5c []string `json:"x5c"`
 }
 
-type Jwks struct {
-	Keys []JSONWebKeys `json:"keys"`
+type jwks struct {
+	Keys []jsonWebKeys `json:"keys"`
 }
 
 func openbrowser(url string) {
@@ -83,7 +83,7 @@ func getPemCert(token *jwt.Token) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	var jwks = Jwks{}
+	var jwks = jwks{}
 	err = json.NewDecoder(resp.Body).Decode(&jwks)
 
 	if err != nil {
@@ -104,7 +104,7 @@ func getPemCert(token *jwt.Token) (string, error) {
 	return cert, nil
 }
 
-type CustomClaims struct {
+type customClaims struct {
 	Scope string `json:"scope"`
 	jwt.StandardClaims
 }
@@ -119,7 +119,7 @@ func tryReadKeychain() bool {
 		return false
 	}
 
-	token, _ := jwt.ParseWithClaims(secret, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, _ := jwt.ParseWithClaims(secret, &customClaims{}, func(token *jwt.Token) (interface{}, error) {
 		cert, err := getPemCert(token)
 		if err != nil {
 			return nil, err
@@ -153,7 +153,7 @@ func doAuth() {
 	handleError(err)
 	defer resp.Body.Close()
 
-	var cr CodeResponse
+	var cr codeResponse
 	err = json.NewDecoder(resp.Body).Decode(&cr)
 	handleError(err)
 
@@ -161,7 +161,7 @@ func doAuth() {
 	delayInterval := time.Duration(cr.Interval) * time.Second
 
 	debug(fmt.Sprintf("Device code response status: %s", resp.Status))
-	debug(fmt.Sprintf("Auth API callback URL: %s", cr.VerificationUriComplete))
+	debug(fmt.Sprintf("Auth API callback URL: %s", cr.VerificationURIComplete))
 
 	// tell user we're about to open a browser window, give them the code to look out for
 	fmt.Println(fmt.Sprintf("We need to authenticate you through a browser. Verify code shown is %s", red(cr.UserCode)))
@@ -169,7 +169,7 @@ func doAuth() {
 	reader := bufio.NewReader(os.Stdin)
 	_, err = reader.ReadString('\n')
 	handleError(err)
-	openbrowser(cr.VerificationUriComplete)
+	openbrowser(cr.VerificationURIComplete)
 
 	for {
 		// wait for a token- continue polling while user is doing their
@@ -192,7 +192,7 @@ func doAuth() {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			var jwtError JwtError
+			var jwtError jwtError
 			err = json.NewDecoder(resp.Body).Decode(&jwtError)
 			handleError(err)
 
@@ -202,7 +202,7 @@ func doAuth() {
 				log.Fatal("Auth failed, came back with " + jwtError.Error)
 			}
 		} else {
-			var success JwtSuccess
+			var success jwtSuccess
 			err = json.NewDecoder(resp.Body).Decode(&success)
 			handleError(err)
 			print("Finished authentication! " + success.AccessToken)

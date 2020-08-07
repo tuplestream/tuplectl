@@ -1,3 +1,5 @@
+//go:generate top
+
 package main
 
 import (
