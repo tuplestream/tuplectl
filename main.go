@@ -4,9 +4,12 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/tuplestream/hawkeye-client"
 )
 
 var Version string
@@ -71,6 +74,32 @@ func dispatchGet(resource string, args []string) {
 	}
 }
 
+func echoData() {
+	doAuth()
+	if len(os.Args) <= 2 {
+		fmt.Println("Usage: tuplectl echo [filename] [-]")
+		os.Exit(1)
+	}
+
+	fileName := os.Args[2]
+	var fd *os.File
+	if os.Args[2] == "-" {
+		fileName = "STDIN"
+		fd = os.Stdin
+	} else {
+		fd, _ = os.Open(fileName)
+	}
+
+	conn, writer := hawkeye.InitiateConnection(fileName, accessToken)
+	defer conn.Close()
+
+	bytesTotal, _ := io.Copy(writer, fd)
+	writer.WriteString("\n")
+	writer.Flush()
+
+	fmt.Println(fmt.Sprintf("Successfully sent %d bytes of data", bytesTotal+1))
+}
+
 func main() {
 	// degenerate case
 	if len(os.Args) < 2 {
@@ -91,6 +120,8 @@ func main() {
 		// 9. success message, link to docs
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
+	case "push":
+		echoData()
 	case "version":
 		fmt.Println("tuplectl " + version())
 	default:
