@@ -16,17 +16,22 @@ jobs:
           name: run dev build
           command: |
             ./build.bash
+            ./build.bash -release
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/*
   test_docker_build:
     docker:
       - image: docker:18.06.3-ce-git
     steps:
       - checkout
       - setup_remote_docker
+      - attach_workspace:
+          at: .
       - run:
           name: attempt to build docker image
           command: |
-            apk add bash
-            ./build.bash -release
             docker build . -t $IMAGENAME
   bump_version:
     docker:
