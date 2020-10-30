@@ -68,8 +68,10 @@ func openbrowser(url string) {
 
 var authKeyName = "com.tuplestream.tuplectl.AccessToken"
 var keychainUser = "default"
-var clientID = getEnvOrDefault("TUPLECTL_AUTH_CLIENT_ID", "QBYgku9TlM8nF1yKGCMJzP0uofnsE2Sx")
-var tenantURL = getEnvOrDefault("TUPLECTL_AUTH_BASE_URL", "https://dev-ak43b46u.eu.auth0.com")
+var DefaultClientID string
+var DefaultTenantURL string
+var clientID = getEnvOrDefault("TUPLECTL_AUTH_CLIENT_ID", DefaultClientID)
+var tenantURL = getEnvOrDefault("TUPLECTL_AUTH_BASE_URL", DefaultTenantURL)
 
 var accessToken = ""
 
