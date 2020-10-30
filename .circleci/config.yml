@@ -12,7 +12,10 @@ jobs:
       - image: tuplestream/golang:latest
     steps:
       - checkout
-      - run: ./build.bash
+      - run:
+          name: run dev build
+          command: |
+            ./build.bash
   test_docker_build:
     docker:
       - image: docker:18.06.3-ce-git
@@ -23,7 +26,8 @@ jobs:
           name: attempt to build docker image
           command: |
             apk add bash
-            ./dockerbuild.bash
+            ./build.bash -release
+            docker build . -t $IMAGENAME
   bump_version:
     docker:
       - image: tuplestream/bumpversion:latest
@@ -35,6 +39,8 @@ jobs:
       - image: tuplestream/golang:latest
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - run:
           name: release build and push
           command: |
@@ -60,11 +66,21 @@ jobs:
       - checkout
       - run: git pull --no-edit origin master
       - setup_remote_docker
+      - attach_workspace:
+          at: .
       - run:
           name: build and publish docker image
           command: |
-            apk add bash
-            ./dockerbuild.bash -release
+            BUILDNAME="tuplectl"
+            IMAGENAME="tuplestream/$BUILDNAME:$(cat VERSION)"
+            IMAGE_LATEST="tuplestream/$BUILDNAME:latest"
+
+            docker build . -t $IMAGENAME
+
+            echo $DKPW | docker login --username $DOCKER_USER --password-stdin
+            docker push $IMAGENAME
+            docker tag $IMAGENAME $IMAGE_LATEST
+            docker push $IMAGE_LATEST
   publish_bootstrap:
     docker:
       - image: tuplestream/aws-cli:latest
@@ -78,10 +94,11 @@ workflows:
     jobs:
       - build
       - check_bootstrap
-      - test_docker_build
-      - bump_version:
+      - test_docker_build:
           requires:
             - build
+      - bump_version:
+          requires:
             - check_bootstrap
             - test_docker_build
           filters:

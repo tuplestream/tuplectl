@@ -2,5 +2,4 @@
 .circleci
 .gitignore
 bootstrap.bash
-bin
 tuplectl
