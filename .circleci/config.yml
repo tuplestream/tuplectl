@@ -21,6 +21,12 @@ jobs:
           root: .
           paths:
             - bin/*
+  lint_dockerfile:
+    docker:
+      - image: hadolint/hadolint
+    steps:
+      - checkout
+      - run: hadolint Dockerfile
   test_docker_build:
     docker:
       - image: docker:18.06.3-ce-git
@@ -99,8 +105,10 @@ workflows:
     jobs:
       - build
       - check_bootstrap
+      - lint_dockerfile
       - test_docker_build:
           requires:
+            - lint_dockerfile
             - build
       - bump_version:
           requires:
