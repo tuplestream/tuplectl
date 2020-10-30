@@ -13,6 +13,16 @@ jobs:
     steps:
       - checkout
       - run: ./build.bash
+  test_docker_build:
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: attempt to build docker image
+          command: |
+            docker build . -t tuplectl-test
   bump_version:
     docker:
       - image: tuplestream/bumpversion:latest
@@ -75,10 +85,12 @@ workflows:
     jobs:
       - build
       - check_bootstrap
+      - test_docker_build
       - bump_version:
           requires:
             - build
             - check_bootstrap
+            - test_docker_build
           filters:
             branches:
               only: master
