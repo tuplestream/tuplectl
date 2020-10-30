@@ -22,6 +22,7 @@ jobs:
       - run:
           name: attempt to build docker image
           command: |
+            apk add bash
             ./dockerbuild.bash
   bump_version:
     docker:
@@ -62,6 +63,7 @@ jobs:
       - run:
           name: build and publish docker image
           command: |
+            apk add bash
             ./dockerbuild.bash -release
   publish_bootstrap:
     docker:
