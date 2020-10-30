@@ -32,7 +32,7 @@ jobs:
       - run:
           name: attempt to build docker image
           command: |
-            docker build . -t $IMAGENAME
+            docker build . -t testimage
   bump_version:
     docker:
       - image: tuplestream/bumpversion:latest
