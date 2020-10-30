@@ -120,7 +120,7 @@ func main() {
 		// 9. success message, link to docs
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
-	case "push":
+	case "echo":
 		echoData()
 	case "version":
 		fmt.Println("tuplectl " + version())
