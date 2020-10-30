@@ -1,3 +1,6 @@
+ARG AUTH0_CLIENT_ID
+ARG AUTH0_TENANT_URL
+
 FROM tuplestream/golang:latest AS build
 
 WORKDIR /build

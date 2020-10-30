@@ -22,7 +22,7 @@ jobs:
       - run:
           name: attempt to build docker image
           command: |
-            docker build . -t tuplectl-test
+            ./dockerbuild.bash
   bump_version:
     docker:
       - image: tuplestream/bumpversion:latest
@@ -62,16 +62,7 @@ jobs:
       - run:
           name: build and publish docker image
           command: |
-            BUILDNAME="tuplectl"
-            IMAGENAME="tuplestream/$BUILDNAME:$(cat VERSION)"
-            IMAGE_LATEST="tuplestream/$BUILDNAME:latest"
-
-            docker build . -t $IMAGENAME
-            echo $DKPW | docker login --username $DOCKER_USER --password-stdin
-            docker push $IMAGENAME
-            docker tag $IMAGENAME $IMAGE_LATEST
-            docker push $IMAGE_LATEST
-
+            ./dockerbuild.bash -release
   publish_bootstrap:
     docker:
       - image: tuplestream/aws-cli:latest
