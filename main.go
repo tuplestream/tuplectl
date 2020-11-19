@@ -36,9 +36,12 @@ func debug(str string) {
 	}
 }
 
+func canPrettyPrint() bool {
+	return runtime.GOOS == "darwin"
+}
+
 func red(str string) string {
-	shouldPrintColor := runtime.GOOS == "darwin"
-	if shouldPrintColor {
+	if canPrettyPrint() {
 		// highlight in red if we're on a mac
 		return "\033[31m" + str + "\033[0m"
 	}
@@ -47,6 +50,13 @@ func red(str string) string {
 
 func warn(str string) {
 	fmt.Println(red("WARNING: ") + str)
+}
+
+func oddChar(str string) string {
+	if canPrettyPrint() {
+		return str
+	}
+	return ""
 }
 
 func version() string {
@@ -59,7 +69,13 @@ func usage() {
 }
 
 func status() {
-	fmt.Println(getResource("status"))
+	resp, err := getResource("/status")
+	handleError(err)
+	if resp.StatusCode == 200 {
+		fmt.Println("All systems are operational " + oddChar("😎 🚀"))
+	} else {
+		fmt.Println("We're having some issues right now")
+	}
 }
 
 func dispatchGet(resource string, args []string) {
@@ -118,6 +134,8 @@ func main() {
 		// 7. prompt for confirmation
 		// 8. tail all streams for response
 		// 9. success message, link to docs
+	case "status":
+		status()
 	case "get":
 		dispatchGet(os.Args[2], os.Args[3:])
 	case "echo":

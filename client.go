@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,7 +24,7 @@ func baseURL() string {
 		}
 		return userSpecified
 	}
-	return "https://api.tuplestream.net"
+	return "https://api.tuplestream.com"
 }
 
 func baseRequest(method string, path string) *http.Request {
@@ -36,16 +35,7 @@ func baseRequest(method string, path string) *http.Request {
 	return req
 }
 
-func execute(req *http.Request) string {
-	resp, err := client.Do(req)
-	handleError(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	handleError(err)
-	return string(body)
-}
-
-func getResource(resource string) string {
-	req := baseRequest("GET", "/"+resource)
-	return execute(req)
+func getResource(resource string) (*http.Response, error) {
+	req := baseRequest("GET", resource)
+	return client.Do(req)
 }
