@@ -164,7 +164,7 @@ func doAuth() {
 	// initiate auth, ask for device token
 	form := url.Values{}
 	form.Add("client_id", clientID)
-	form.Add("scope", "logstream")
+	form.Add("scope", "admin")
 	form.Add("audience", "https://api.tuplestream.net/")
 
 	resp, err := http.PostForm(tenantURL+"/oauth/device/code", form)
