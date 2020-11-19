@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -165,14 +166,16 @@ func doAuth() {
 	form := url.Values{}
 	form.Add("client_id", clientID)
 	form.Add("scope", "admin")
-	form.Add("audience", "https://api.tuplestream.net/")
+	form.Add("audience", "https://api.tuplestream.com/")
 
 	resp, err := http.PostForm(tenantURL+"/oauth/device/code", form)
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	debug(string(respBytes))
 	handleError(err)
 	defer resp.Body.Close()
 
 	var cr codeResponse
-	err = json.NewDecoder(resp.Body).Decode(&cr)
+	err = json.Unmarshal(respBytes, &cr)
 	handleError(err)
 
 	expiryDeadline := time.Now().Add(time.Second * time.Duration(cr.ExpiresIn))
