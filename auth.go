@@ -223,7 +223,6 @@ func doAuth() {
 			var success jwtSuccess
 			err = json.NewDecoder(resp.Body).Decode(&success)
 			handleError(err)
-			print("Finished authentication!")
 
 			if getEnvOrDefault("TUPLECTL_PRINT_AUTH_TOKEN", "") != "" {
 				print(success.AccessToken)

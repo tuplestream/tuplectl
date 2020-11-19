@@ -8,7 +8,11 @@ import (
 	"runtime"
 )
 
-var client = &http.Client{}
+var client = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
 
 func userAgent() string {
 	return fmt.Sprintf("tuplectl-%s-%s-%s", version(), runtime.GOOS, runtime.GOARCH)
@@ -28,7 +32,12 @@ func baseURL() string {
 }
 
 func baseRequest(method string, path string) *http.Request {
-	req, err := http.NewRequest(method, baseURL()+path, nil)
+	if accessToken == "" {
+		doAuth()
+	}
+	target := baseURL() + path
+	debug("Calling " + target)
+	req, err := http.NewRequest(method, target, nil)
 	handleError(err)
 	req.Header.Add("Authorization", "Bearer "+accessToken)
 	req.Header.Add("User-Agent", userAgent())

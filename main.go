@@ -69,7 +69,7 @@ func usage() {
 }
 
 func status() {
-	resp, err := getResource("/status")
+	resp, err := getResource("/platform/status")
 	handleError(err)
 	if resp.StatusCode == 200 {
 		fmt.Println("All systems are operational " + oddChar("😎 🚀"))
@@ -78,10 +78,23 @@ func status() {
 	}
 }
 
+func billing() {
+	fmt.Println("Contacting billing portal... " + oddChar("💵"))
+	resp, err := getResource("/platform/billing/portal")
+	if resp.StatusCode >= 400 {
+		panic(resp.Status)
+	}
+	handleError(err)
+	defer resp.Body.Close()
+	location := resp.Header["Location"][0]
+	fmt.Println("Press any key to open the billing portal in a browser")
+	openbrowser(location)
+}
+
 func dispatchGet(resource string, args []string) {
 	doAuth()
 	switch resource {
-	case "logstreams":
+	case "unc":
 		fmt.Println("TODO logstreams")
 	case "status":
 		status()
@@ -142,6 +155,8 @@ func main() {
 		echoData()
 	case "version":
 		fmt.Println("tuplectl " + version())
+	case "billing":
+		billing()
 	default:
 		usage()
 	}
