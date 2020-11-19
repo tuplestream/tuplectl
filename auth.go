@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -51,16 +50,33 @@ type jwks struct {
 	Keys []jsonWebKeys `json:"keys"`
 }
 
+func printAuthAddress(url string) {
+	fmt.Println("To continue authentication, open this url in a browser: " + url)
+}
+
+func waitForKeyPress() {
+	reader := bufio.NewReader(os.Stdin)
+	_, err := reader.ReadString('\n')
+	handleError(err)
+}
+
 func openbrowser(url string) {
 	var err error
 
+	if getEnvOrDefault("TUPLECTL_OPEN_BROWSER", "true") != "true" {
+		printAuthAddress(url)
+		return
+	}
+
 	switch runtime.GOOS {
 	case "linux":
+		waitForKeyPress()
 		err = exec.Command("xdg-open", url).Start()
 	case "darwin":
+		waitForKeyPress()
 		err = exec.Command("open", url).Start()
 	default:
-		fmt.Println("To continue authentication, open this url in a browser: " + url)
+		printAuthAddress(url)
 	}
 
 	handleError(err)
@@ -168,9 +184,6 @@ func doAuth() {
 	// tell user we're about to open a browser window, give them the code to look out for
 	fmt.Println(fmt.Sprintf("We need to authenticate you through a browser. Verify code shown is %s", red(cr.UserCode)))
 	fmt.Println("Press any key to start")
-	reader := bufio.NewReader(os.Stdin)
-	_, err = reader.ReadString('\n')
-	handleError(err)
 	openbrowser(cr.VerificationURIComplete)
 
 	for {
@@ -207,9 +220,11 @@ func doAuth() {
 			var success jwtSuccess
 			err = json.NewDecoder(resp.Body).Decode(&success)
 			handleError(err)
-			print("Finished authentication! " + success.AccessToken)
-			print("Type " + success.TokenType)
-			print("expires in" + strconv.Itoa(success.ExpiresIn))
+			print("Finished authentication!")
+
+			if getEnvOrDefault("TUPLECTL_PRINT_AUTH_TOKEN", "") != "" {
+				print(success.AccessToken)
+			}
 
 			// set password in keyring
 			err := keyring.Set(authKeyName, keychainUser, success.AccessToken)
