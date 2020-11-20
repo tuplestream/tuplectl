@@ -196,6 +196,7 @@ func (r *StatusCmd) Run(ctx *Context) error {
 type CreateCmd struct {
 	Resource string `arg name:"resource" help:"Type of resource to create"`
 	Name     string `arg name:"name" help:"Name of the resource to create"`
+	Follow   bool   `arg optional name:"follow" help:"Wait for the resource to become ready after successful creation"`
 }
 
 func (r *CreateCmd) Run(ctx *Context) error {
@@ -214,6 +215,10 @@ func (r *CreateCmd) Run(ctx *Context) error {
 		return err
 	}
 	fmt.Println(r.Resource + " named '" + r.Name + "' created")
+
+	if r.Follow == true {
+		// TODO
+	}
 	return nil
 }
 
@@ -263,6 +268,9 @@ func (r *DeleteCmd) Run(ctx *Context) error {
 		return err
 	}
 	if res.StatusCode >= 400 {
+		if res.StatusCode == 404 {
+			return errors.New("Resource not found")
+		}
 		return errors.New("Request error: " + res.Status)
 	}
 	fmt.Println("Successfully deleted " + r.Resource)

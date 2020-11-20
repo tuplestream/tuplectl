@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/tj/go-spin"
 	"github.com/zalando/go-keyring"
 )
 
@@ -169,6 +170,7 @@ func doAuth() {
 	form.Add("audience", "https://api.tuplestream.com/")
 
 	resp, err := http.PostForm(tenantURL+"/oauth/device/code", form)
+	handleError(err)
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	debug(string(respBytes))
 	handleError(err)
@@ -186,14 +188,21 @@ func doAuth() {
 
 	// tell user we're about to open a browser window, give them the code to look out for
 	fmt.Println(fmt.Sprintf("We need to authenticate you through a browser. Verify code shown is %s", red(cr.UserCode)))
-	fmt.Println("Press any key to start")
+	fmt.Println("Press enter to start")
 	openbrowser(cr.VerificationURIComplete)
+
+	s := spin.New()
 
 	for {
 		// wait for a token- continue polling while user is doing their
 		// thing in the browser
 		debug(fmt.Sprintf("Sleeping for %v before polling again", delayInterval))
-		time.Sleep(delayInterval)
+		delayDeadline := time.Now().Add(delayInterval)
+
+		for time.Now().Before(delayDeadline) {
+			fmt.Printf("\rWaiting... %s", s.Next())
+			time.Sleep(75 * time.Millisecond)
+		}
 
 		// user took to long or abandonded auth- give up
 		if time.Now().After(expiryDeadline) {
