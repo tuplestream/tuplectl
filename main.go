@@ -255,16 +255,16 @@ func (r *GetCmd) Run(ctx *Context) error {
 	}
 	if r.ID == "" {
 		jsonString := getResourceString(baseURL)
-		if jsonString == "" {
+		deserialized := []TupleStreamResource{}
+		err = json.Unmarshal([]byte(jsonString), &deserialized)
+		handleError(err)
+		if len(deserialized) == 0 {
 			fmt.Println(fmt.Sprintf("No %s resources found for this tenant", r.Resource))
+			return nil
 		}
 		if r.JSON {
 			fmt.Print(jsonString)
 		} else {
-			deserialized := []TupleStreamResource{}
-			err = json.Unmarshal([]byte(jsonString), &deserialized)
-			handleError(err)
-
 			w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 			fmt.Fprintln(w, "NAME\tID\tCREATED AT")
 			for _, resource := range deserialized {
