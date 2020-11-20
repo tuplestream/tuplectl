@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"text/tabwriter"
 
 	"github.com/alecthomas/kong"
 	"github.com/tuplestream/hawkeye-client"
@@ -225,6 +227,7 @@ func (r *CreateCmd) Run(ctx *Context) error {
 type GetCmd struct {
 	Resource string `arg name:"resource" help:"Type of resource to retrieve"`
 	ID       string `arg optional name:"id" help:"ID of specific resource to retrieve"`
+	JSON     bool   `help:"return output as JSON instead of pretty-printed table"`
 }
 
 type EchoCmd struct {
@@ -239,13 +242,36 @@ type LogsCmd struct {
 	Tail TailCmd `cmd name:"tail" help:"Tail this tenant's log stream in real-time"`
 }
 
+type TupleStreamResource struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"created_at"`
+}
+
 func (r *GetCmd) Run(ctx *Context) error {
 	baseURL, err := getResourceURL(r.Resource)
 	if err != nil {
 		return err
 	}
 	if r.ID == "" {
-		fmt.Println(getResourceString(baseURL))
+		jsonString := getResourceString(baseURL)
+		if jsonString == "" {
+			fmt.Println(fmt.Sprintf("No %s resources found for this tenant", r.Resource))
+		}
+		if r.JSON {
+			fmt.Print(jsonString)
+		} else {
+			deserialized := []TupleStreamResource{}
+			err = json.Unmarshal([]byte(jsonString), &deserialized)
+			handleError(err)
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(w, "NAME\tID\tCREATED AT")
+			for _, resource := range deserialized {
+				fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s", resource.Name, resource.ID, resource.CreatedAt))
+			}
+			w.Flush()
+		}
 	} else {
 		fmt.Println(getResourceString(baseURL + "/" + r.ID))
 	}

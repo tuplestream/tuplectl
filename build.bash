@@ -12,7 +12,7 @@ COMMIT=$(git rev-parse --short HEAD)
 if [[ " $@ " =~ " -release" ]]; then
   mkdir -p bin
 
-  go vet
+  # go vet
   GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE' -X main.DefaultClientID=$AUTH0_CLIENT_ID -X main.DefaultTenantURL=$AUTH0_TENANT_URL" -a -o bin/tuplectl-linux-amd64 .
   GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Commit=$COMMIT -X main.Version=$VERSION -X 'main.BuildDate=$BUILD_DATE' -X main.DefaultClientID=$AUTH0_CLIENT_ID -X main.DefaultTenantURL=$AUTH0_TENANT_URL" -a -o bin/tuplectl-darwin-amd64 .
 else
