@@ -239,6 +239,8 @@ func doAuth() {
 
 			// set password in keyring
 			err := keyring.Set(authKeyName, keychainUser, success.AccessToken)
+			// set accessToken var
+			accessToken = success.AccessToken
 			if err != nil {
 				warn("unable to store credentials in the system keychain. " +
 					"You'll have to repeat this process next time you run an authenticated tuplectl command")
