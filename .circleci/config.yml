@@ -69,7 +69,12 @@ jobs:
       - run: git pull --no-edit origin master
       - attach_workspace:
           at: .
-      - run: hub release create -a bin/tuplectl-linux-amd64 -a bin/tuplectl-darwin-amd64 -m $(cat VERSION) "v$(cat VERSION)"
+      - run:
+          name: Generate checksums for binaries
+          command: |
+            sha256sum bin/tuplectl-darwin-amd64 | grep -o '^\S*' | tr -d "\n" > tuplectl-darwin-amd64.sha256sum
+            sha256sum bin/tuplectl-linux-amd64 | grep -o '^\S*' | tr -d "\n" > tuplectl-linux-amd64.sha256sum
+      - run: hub release create -a bin/tuplectl-linux-amd64 -a tuplectl-linux-amd64.sha256sum -a bin/tuplectl-darwin-amd64 -a tuplectl-darwin-amd64.sha256sum -m $(cat VERSION) "v$(cat VERSION)"
   docker_release:
     docker:
       - image: docker:18.06.3-ce-git
