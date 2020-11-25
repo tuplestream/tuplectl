@@ -216,11 +216,13 @@ func (r *CreateCmd) Run(ctx *Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(r.Resource + " named '" + r.Name + "' created")
 
 	if r.Follow == true {
 		// TODO
+	} else {
+		fmt.Println(r.Resource + " named '" + r.Name + "' created")
 	}
+
 	return nil
 }
 

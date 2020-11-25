@@ -75,6 +75,11 @@ jobs:
             sha256sum bin/tuplectl-darwin-amd64 | grep -o '^\S*' | tr -d "\n" > tuplectl-darwin-amd64.sha256sum
             sha256sum bin/tuplectl-linux-amd64 | grep -o '^\S*' | tr -d "\n" > tuplectl-linux-amd64.sha256sum
       - run: hub release create -a bin/tuplectl-linux-amd64 -a tuplectl-linux-amd64.sha256sum -a bin/tuplectl-darwin-amd64 -a tuplectl-darwin-amd64.sha256sum -m $(cat VERSION) "v$(cat VERSION)"
+  update_homebrew:
+    docker:
+      image: tuplestream/bumpversion:latest
+    steps:
+      - run: curl -i -u "$CIRCLE_HOMEBREW_TOKEN:" -X POST https://circleci.com/api/v1.1/project/gh/tuplestream/homebrew-tap/tree/master
   docker_release:
     docker:
       - image: docker:18.06.3-ce-git
@@ -128,6 +133,9 @@ workflows:
       - github_release:
           requires:
             - release_build
+      - update_homebrew:
+          requires:
+            - github_release
       - docker_release:
           requires:
             - release_build
