@@ -9,11 +9,14 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"runtime"
 	"text/tabwriter"
+	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/tj/go-spin"
 	"github.com/tuplestream/hawkeye-client"
 )
 
@@ -198,7 +201,7 @@ func (r *StatusCmd) Run(ctx *Context) error {
 type CreateCmd struct {
 	Resource string `arg name:"resource" help:"Type of resource to create"`
 	Name     string `arg name:"name" help:"Name of the resource to create"`
-	Follow   bool   `arg optional name:"follow" help:"Wait for the resource to become ready after successful creation"`
+	Follow   bool   `optional name:"follow" short:"f" help:"Wait for the resource to become ready after successful creation, display progress on the terminal"`
 }
 
 func (r *CreateCmd) Run(ctx *Context) error {
@@ -217,10 +220,47 @@ func (r *CreateCmd) Run(ctx *Context) error {
 		return err
 	}
 
+	fmt.Println(r.Resource + " named '" + r.Name + "' created")
+
 	if r.Follow == true {
-		// TODO
-	} else {
-		fmt.Println(r.Resource + " named '" + r.Name + "' created")
+		wait := res.Header.Get("X-Retry-After")
+		createdResource := res.Header.Get("Location")
+		if wait == "" || createdResource == "" {
+			return nil
+		}
+
+		introString := "This can take 2-3 minutes, waiting for a bit (you can Ctrl-C this any time, run 'tuplectl get uncs' to check back " + oddChar("🙂 ") + ")"
+		fmt.Println(introString)
+
+		s := spin.New()
+		tries := 0
+		for tries < 10 {
+			fmt.Println("")
+			resource := TupleStreamResource{}
+			u, err := url.Parse(createdResource)
+			handleError(err)
+
+			err = json.Unmarshal([]byte(getResourceString(u.Path)), &resource)
+			handleError(err)
+
+			if resource.State == "ready" {
+				targetURL := "https://" + r.Name + ".unc.tuplestream.com"
+				fmt.Println(fmt.Sprintf("%s is ready to go, press any key to open a browser.", r.Resource))
+				openbrowser(targetURL)
+				return nil
+			}
+
+			deadline := time.Now().Add(time.Second * time.Duration(30))
+
+			for time.Now().Before(deadline) {
+				fmt.Print("\rWaiting another 30 seconds " + s.Next())
+				time.Sleep(75 * time.Millisecond)
+			}
+
+			tries++
+		}
+
+		fmt.Println(fmt.Sprintf("This is taking a little longer than usual. Check back with 'tuplectl get %s' to see when it's ready", r.Resource))
 	}
 
 	return nil
@@ -248,6 +288,7 @@ type TupleStreamResource struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	CreatedAt string `json:"created_at"`
+	State     string `json:"state"`
 }
 
 func (r *GetCmd) Run(ctx *Context) error {
@@ -268,9 +309,13 @@ func (r *GetCmd) Run(ctx *Context) error {
 			fmt.Print(jsonString)
 		} else {
 			w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(w, "NAME\tID\tCREATED AT")
+			fmt.Fprintln(w, "NAME\tID\tSTATE\tCREATED AT\tHOSTNAME")
 			for _, resource := range deserialized {
-				fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s", resource.Name, resource.ID, resource.CreatedAt))
+				var hostname = "-"
+				if resource.State == "ready" {
+					hostname = fmt.Sprintf("https://%s.unc.tuplestream.com", resource.Name)
+				}
+				fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t%s", resource.Name, resource.ID, resource.State, resource.CreatedAt, hostname))
 			}
 			w.Flush()
 		}
