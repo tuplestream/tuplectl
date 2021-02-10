@@ -129,6 +129,10 @@ type customClaims struct {
 	jwt.StandardClaims
 }
 
+func removeKey() {
+	keyring.Delete(authKeyName, keychainUser)
+}
+
 // attempt to pull a jwt from the system key store
 // if a valid, in-date jwt is found, returns true
 // in all other circumstances returns false
@@ -149,7 +153,7 @@ func tryReadKeychain() bool {
 	})
 
 	if !token.Valid {
-		keyring.Delete(authKeyName, keychainUser)
+		removeKey()
 		return false
 	}
 
@@ -187,7 +191,7 @@ func doAuth() {
 	debug(fmt.Sprintf("Auth API callback URL: %s", cr.VerificationURIComplete))
 
 	// tell user we're about to open a browser window, give them the code to look out for
-	fmt.Println(fmt.Sprintf("We need to authenticate you through a browser. Verify code shown is %s", red(cr.UserCode)))
+	fmt.Println(fmt.Sprintf("Need to open a browser. Check you see the code: %s", bold(cr.UserCode)))
 	fmt.Println("Press enter to start")
 	openbrowser(cr.VerificationURIComplete)
 
@@ -206,7 +210,7 @@ func doAuth() {
 
 		// user took to long or abandonded auth- give up
 		if time.Now().After(expiryDeadline) {
-			log.Fatal("Couldn't verify device token in time")
+			log.Fatal("Couldn't finish authenticating in time, try again")
 		}
 
 		pollForm := url.Values{}
@@ -236,6 +240,8 @@ func doAuth() {
 			if getEnvOrDefault("TUPLECTL_PRINT_AUTH_TOKEN", "") != "" {
 				print(success.AccessToken)
 			}
+
+			fmt.Println("Successfully authenticated")
 
 			// set password in keyring
 			err := keyring.Set(authKeyName, keychainUser, success.AccessToken)
