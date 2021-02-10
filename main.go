@@ -153,7 +153,7 @@ func (r *StatusCmd) Run(ctx *Context) error {
 }
 
 type EchoCmd struct {
-	File string `arg optional name:"file" help:"Path to file to send to TupleStream logging platform"`
+	File string `arg optional name:"file" help:"File to upload for ingestion. Passing '-' reads from STDIN"`
 }
 
 type TailCmd struct {
@@ -170,7 +170,7 @@ func (r *DeployCmd) Run(ctx *Context) error {
 }
 
 type LogsCmd struct {
-	Echo   EchoCmd   `cmd name:"echo" help:"Directly send some log data to TupleStream from the local file system or from STDOUT"`
+	Echo   EchoCmd   `cmd name:"echo" help:"Directly send some log data to TupleStream"`
 	Tail   TailCmd   `cmd name:"tail" help:"Tail this tenant's log stream in real-time"`
 	Deploy DeployCmd `cmd name:"deploy" help:"Deploy a TupleStream logging integration"`
 }

@@ -241,7 +241,7 @@ func doAuth() {
 				print(success.AccessToken)
 			}
 
-			fmt.Println("Successfully authenticated")
+			fmt.Println("\nSuccessfully authenticated")
 
 			// set password in keyring
 			err := keyring.Set(authKeyName, keychainUser, success.AccessToken)
