@@ -160,12 +160,20 @@ type TailCmd struct {
 }
 
 type DeployCmd struct {
-	Target     string `arg name:"target" help:"Type of infrastructure to target. Currently the only option is 'k8s'"`
-	KubeConfig string `flag name:"kubeconfig" help:"Path to kube config file. Defaults to ~/.kube/config" default:"~/.kube/config"`
-	Yaml       bool   `flag name:"yaml" help:"Write proposed Kubernetes resources as yaml to stdout rather than applying them directly"`
+	Target string `arg name:"target" help:"Type of infrastructure to target. Currently the only option is 'k8s'"`
 }
 
 func (r *DeployCmd) Run(ctx *Context) error {
+	if r.Target != "k8s" {
+		fmt.Println("Only 'k8s' is accepted as a valid target")
+		os.Exit(1)
+	}
+
+	if !tryReadKeychain() {
+		fmt.Println("You're not signed in. Run 'tuplectl login' before attempting a deployment")
+		os.Exit(1)
+	}
+	deploy()
 	return nil
 }
 
@@ -176,10 +184,20 @@ type LogsCmd struct {
 }
 
 type LogoutCmd struct{}
+type LoginCmd struct{}
 
 func (r *LogoutCmd) Run(ctx *Context) error {
 	removeKey()
 	fmt.Println("Logged out")
+	return nil
+}
+
+func (r *LoginCmd) Run(ctx *Context) error {
+	if tryReadKeychain() {
+		fmt.Println("You already have a valid session on this machine, no need to authenticate")
+	} else {
+		doAuth()
+	}
 	return nil
 }
 
@@ -190,6 +208,7 @@ var CLI struct {
 	Logs    LogsCmd    `cmd name:"logs" help:"Interact with the TupleStream log management service for this tenant"`
 	Version VersionCmd `cmd name:"version" help:"Show version information for this tuplectl build"`
 	Deploy  DeployCmd  `cmd name:"deploy" help:"Deploy a TupleStream integration to your infrastructure"`
+	Login   LoginCmd   `cmd name:"login" help:"Sign into the TupleStream platform or create an account"`
 	Logout  LogoutCmd  `cmd name:"logout" help:"Log out of your TupleStream account on this machine"`
 }
 
